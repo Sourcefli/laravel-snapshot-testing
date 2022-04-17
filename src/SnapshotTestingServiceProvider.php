@@ -2,9 +2,9 @@
 
 namespace Sourcefli\SnapshotTesting;
 
+use Sourcefli\SnapshotTesting\Commands\SnapshotTestingCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Sourcefli\SnapshotTesting\Commands\SnapshotTestingCommand;
 
 class SnapshotTestingServiceProvider extends PackageServiceProvider
 {
