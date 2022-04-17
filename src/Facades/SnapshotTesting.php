@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Facade;
  */
 class SnapshotTesting extends Facade
 {
-    protected static function getFacadeAccessor()
-    {
-        return 'laravel-snapshot-testing';
+    protected static function getFacadeAccessor(): string
+	{
+        return SnapshotTesting::class;
     }
 }
