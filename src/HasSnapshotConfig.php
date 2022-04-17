@@ -2,22 +2,22 @@
 
 namespace Sourcefli\SnapshotTesting;
 
-use JetBrains\PhpStorm\ArrayShape;
+use Sourcefli\SnapshotTesting\Contracts\ITimeTravelScenario;
 use Sourcefli\SnapshotTesting\Exceptions\SnapshotTestingException;
-use Sourcefli\SnapshotTesting\Scenarios\TimeTravel\ITimeTravelScenario;
 
 trait HasSnapshotConfig
 {
 	/**
 	 * @param  string|null  $attribute
+	 * @param  mixed|null  $default
 	 *
 	 * @return array|string
 	 */
-	public function getConfig(?string $attribute = null): array|string
+	public function getConfig(?string $attribute = null, mixed $default = null): array|string
 	{
 		$path = rtrim(sprintf('snapshot-testing.%s', $attribute ?? ''), '.');
 
-		return $this->config->get($path);
+		return $this->config->get($path, $default);
 	}
 
 	/**

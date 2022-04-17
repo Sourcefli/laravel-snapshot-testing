@@ -1,9 +1,11 @@
 <?php
 
-namespace Sourcefli\SnapshotTesting\Scenarios\TimeTravel;
+namespace Sourcefli\SnapshotTesting\Contracts;
 
 use Carbon\CarbonImmutable;
+use Sourcefli\SnapshotTesting\Attributes\SnapshotCategory;
 
+#[SnapshotCategory(self::class)]
 interface ITimeTravelScenario
 {
 	/**

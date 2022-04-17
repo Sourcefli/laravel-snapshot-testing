@@ -1,8 +1,7 @@
 <?php
 
-namespace Sourcefli\SnapshotTesting\Snapshots;
+namespace Sourcefli\SnapshotTesting\Contracts;
 
-use App\Domain\Testing\Snapshots\ISnapshotConnection;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Connection;
 use Illuminate\Database\ConnectionInterface;
@@ -11,11 +10,10 @@ interface IDatabaseSnapshot
 {
 	/**
 	 * @param  ISnapshotConnection  $connection
-	 * @param  bool  $refreshDatabase
 	 *
 	 * @return static
 	 */
-	public function applyDatabaseState(ISnapshotConnection $connection, bool $refreshDatabase = false): static;
+	public function applyDatabaseState(ISnapshotConnection $connection): static;
 
 	/**
 	 * @return ConnectionInterface|Connection

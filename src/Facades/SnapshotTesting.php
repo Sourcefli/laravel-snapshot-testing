@@ -11,6 +11,6 @@ class SnapshotTesting extends Facade
 {
     protected static function getFacadeAccessor(): string
 	{
-        return SnapshotTesting::class;
+        return 'snapshot-testing';
     }
 }
