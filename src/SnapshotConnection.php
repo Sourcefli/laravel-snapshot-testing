@@ -1,6 +1,6 @@
 <?php
 
-namespace Sourcefli\SnapshotTesting\Snapshots;
+namespace Sourcefli\SnapshotTesting;
 
 use Closure;
 use Illuminate\Contracts\Config\Repository;
@@ -15,10 +15,8 @@ use JetBrains\PhpStorm\ArrayShape;
 use Sourcefli\SnapshotTesting\Contracts\IDatabaseSnapshot;
 use Sourcefli\SnapshotTesting\Contracts\ISnapshotConnection;
 use Sourcefli\SnapshotTesting\Exceptions\SnapshotTestingException;
-use Sourcefli\SnapshotTesting\HasSnapshotConfig;
-use Sourcefli\SnapshotTesting\SnapshotTesting;
 
-class Connection implements ISnapshotConnection
+class SnapshotConnection implements ISnapshotConnection
 {
 	use HasSnapshotConfig;
 
@@ -109,8 +107,6 @@ class Connection implements ISnapshotConnection
 		}
 
 		$this->refreshDatabase();
-
-		$newSnapshot->applyDatabaseState($this);
 
 		return $this;
 	}

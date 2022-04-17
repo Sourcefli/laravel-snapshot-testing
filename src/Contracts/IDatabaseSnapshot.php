@@ -9,11 +9,9 @@ use Illuminate\Database\ConnectionInterface;
 interface IDatabaseSnapshot
 {
 	/**
-	 * @param  ISnapshotConnection  $connection
-	 *
 	 * @return static
 	 */
-	public function applyDatabaseState(ISnapshotConnection $connection): static;
+	public function applyDatabaseState(): static;
 
 	/**
 	 * @return ConnectionInterface|Connection

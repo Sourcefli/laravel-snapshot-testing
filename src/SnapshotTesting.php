@@ -8,8 +8,11 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Storage;
 use ReflectionClass;
+use Sourcefli\SnapshotTesting\Attributes\SnapshotCategory;
+use Sourcefli\SnapshotTesting\Contracts\IScenario;
 use Sourcefli\SnapshotTesting\Contracts\ISnapshotConnection;
 use Sourcefli\SnapshotTesting\Contracts\ITimeTravelScenario;
 use Sourcefli\SnapshotTesting\Exceptions\SnapshotTestingException;
@@ -47,7 +50,7 @@ class SnapshotTesting
 
 		return collect($files)
 			->map(fn (SplFileInfo $fileInfo) => new ReflectionClass("Sourcefli\\SnapshotTesting\\Contracts\\".$fileInfo->getFilenameWithoutExtension()))
-			->filter(fn (ReflectionClass $class) => count($class->getAttributes(SnapshotScenario::class)))
+			->filter(fn (ReflectionClass $class) => count($class->getAttributes(SnapshotCategory::class)))
 			->map(fn (ReflectionClass $class) => $class->getName());
 	}
 
@@ -61,14 +64,21 @@ class SnapshotTesting
 
 	public function usingScenario(string $scenario): SnapshotScenario
 	{
-		return match(TRUE) {
-			$scenario instanceof ITimeTravelScenario => $this->whenCurrentDateIs($scenario->getTimeTravelDate()),
+		/** @var IScenario&SnapshotScenario $newScenario */
+		$newScenario = match(TRUE) {
+			is_a($scenario, ITimeTravelScenario::class, true) => app($scenario),
 			default => throw SnapshotTestingException::unknownScenario($scenario)
 		};
+
+		$newScenario->setupTestEnvironment();
+
+		return $newScenario;
 	}
 
-	public function whenCurrentDateIs(CarbonInterface $currentDate): ITimeTravelScenario&SnapshotScenario
+	public function whenCurrentDateIs(CarbonInterface $currentDate): static
 	{
+		Date::setTestNow($currentDate);
 
+		return $this;
 	}
 }

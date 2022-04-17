@@ -6,7 +6,7 @@ use Carbon\CarbonImmutable;
 use Sourcefli\SnapshotTesting\Attributes\SnapshotCategory;
 
 #[SnapshotCategory(self::class)]
-interface ITimeTravelScenario
+interface ITimeTravelScenario extends IScenario
 {
 	/**
 	 * @return CarbonImmutable

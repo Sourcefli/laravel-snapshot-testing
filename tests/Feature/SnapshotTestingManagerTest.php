@@ -46,10 +46,11 @@ it('provides scenario contracts that are currently available', function () {
 	$this->assertSame($currentlyAvailable, $contracts);
 });
 
-it('can time travel using a time travel scenario', function () {
+it('time travels using a time travel scenario', function () {
+	SnapshotTesting::usingScenario(Scenarios\TodayIsMarch3rd2021::class);
 
-	$disk = SnapshotTesting::usingScenario(Scenarios\TodayIsMarch3rd2021::class);
-
-	$this->assertContains(Filesystem::class, class_implements($disk));
-	$this->assertStringEndsWith('storage/framework/cache/snapshots', $disk->getConfig()['root']);
+	$this->assertSame(
+		'2021-03-03',
+		now()->toDateString(),
+	);
 });
