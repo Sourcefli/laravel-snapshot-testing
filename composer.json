@@ -1,0 +1,70 @@
+{
+    "name": "sourcefli/laravel-snapshot-testing",
+    "description": "run Laravel tests against pre-determined database state",
+    "keywords": [
+        "sourcefli",
+        "laravel",
+        "laravel-snapshot-testing"
+    ],
+    "homepage": "https://github.com/sourcefli/laravel-snapshot-testing",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jonathan Havens",
+            "email": "mail@jhavens.tech",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "spatie/laravel-package-tools": "^1.9.2",
+        "illuminate/contracts": "^9.0"
+    },
+    "require-dev": {
+        "nunomaduro/collision": "^6.0",
+        "nunomaduro/larastan": "^2.0.1",
+        "orchestra/testbench": "^7.0",
+        "pestphp/pest": "^1.21",
+        "pestphp/pest-plugin-laravel": "^1.1",
+        "phpstan/extension-installer": "^1.1",
+        "phpstan/phpstan-deprecation-rules": "^1.0",
+        "phpstan/phpstan-phpunit": "^1.0",
+        "phpunit/phpunit": "^9.5",
+        "spatie/laravel-ray": "^1.26"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sourcefli\\SnapshotTesting\\": "src",
+            "Sourcefli\\SnapshotTesting\\Database\\Factories\\": "database/factories"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Sourcefli\\SnapshotTesting\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "analyse": "vendor/bin/phpstan analyse",
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Sourcefli\\SnapshotTesting\\SnapshotTestingServiceProvider"
+            ],
+            "aliases": {
+                "SnapshotTesting": "Sourcefli\\SnapshotTesting\\Facades\\SnapshotTesting"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
