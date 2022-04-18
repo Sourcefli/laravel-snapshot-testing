@@ -23,7 +23,7 @@ class SnapshotTestingException extends InvalidArgumentException
 		return new static(
 			sprintf("unknown scenario type [%s], does this class implement one of the following snapshot scenario contracts: [%s]?",
 				class_basename($scenario),
-				SnapshotTesting::collectScenarioContracts()->values()->map(fn ($class) => class_basename($class))->implode(', ')
+				self::getScenarioContracts()
 			)
 		);
 	}
@@ -34,7 +34,31 @@ class SnapshotTestingException extends InvalidArgumentException
 		$scenario = class_basename($scenario);
 
 		return new static(
-			"[{$scenario}] does not support snapshot [{$snapshot}]. To add it, list [{$snapshot}] in the getSnapshots() method of the [{$scenario}] "
+			"[{$scenario}] does not support snapshot [{$snapshot}]. To add new snapshots, list them in the snapshotDeclarations() method of each scenario"
+		);
+	}
+
+	public static function categoryNotFound(string $snapshotClass)
+	{
+		$snapshotClass = class_basename($snapshotClass);
+
+		return new static(
+			"no snapshot category was found for [{$snapshotClass}]. This class must implement one of the built-in scenario-based contracts: [".self::getScenarioContracts()."]"
+		);
+	}
+
+	private static function getScenarioContracts(): string
+	{
+		return SnapshotTesting::collectScenarioContracts()->values()->map(fn ($class) => class_basename($class))->implode(', ');
+	}
+
+	public static function classInvalid(string|object $invalidClass, string $expectedClass): static
+	{
+		$invalidClass = class_basename($invalidClass);
+		$expectedClass = class_basename($expectedClass);
+
+		return new static(
+			"Expected class of type [{$expectedClass}], received [{$invalidClass}]"
 		);
 	}
 }

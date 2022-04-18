@@ -1,6 +1,6 @@
 <?php
 
-namespace Sourcefli\SnapshotTesting\Tests\Fixtures\Snapshots;
+namespace Sourcefli\SnapshotTesting\Snapshots\Examples;
 
 use Carbon\CarbonInterface;
 use Illuminate\Database\Connection;
@@ -12,7 +12,6 @@ class UsersHadOnePostPerMonth implements IDatabaseSnapshot
 {
 	public function applyDatabaseState(): static
 	{
-
 		// TODO: Implement applyDatabaseState() method.
 	}
 

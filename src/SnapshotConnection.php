@@ -3,7 +3,6 @@
 namespace Sourcefli\SnapshotTesting;
 
 use Closure;
-use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Connection as DBConnection;
 use Illuminate\Database\Console\Migrations\FreshCommand;
 use Illuminate\Database\Schema\Builder as SchemaBuilder;
@@ -35,10 +34,15 @@ class SnapshotConnection implements ISnapshotConnection
 	 */
 	protected static Closure|bool $shouldRefresh;
 
-	public function __construct(
-		protected Repository $config,
-		protected SnapshotTesting $snapshotManager
-	) {
+	/**
+	 * @var SnapshotTesting
+	 */
+	protected SnapshotTesting $snapshotManager;
+
+	public function __construct()
+	{
+		$this->snapshotManager = app('snapshot-testing');
+
 		$this->setDatabase(
 			$this->getConfiguredConnection()
 		);
@@ -128,7 +132,7 @@ class SnapshotConnection implements ISnapshotConnection
 
 		$settings = $settings + self::getInMemorySettings();
 
-		$this->config->set("database.connections.".$name = Arr::pull($settings, 'name'), $settings);
+		config()->set("database.connections.".$name = Arr::pull($settings, 'name'), $settings);
 
 		return DB::connection($name);
 	}

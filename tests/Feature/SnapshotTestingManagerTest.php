@@ -8,8 +8,8 @@ use Sourcefli\SnapshotTesting\Tests\Fixtures\Scenarios;
 
 beforeEach(function () {
 	config(['snapshot-testing.scenarios.time_travelers' => [
-		Scenarios\TodayIsMarch3rd2021::class,
-		Scenarios\TodayIsApril1st2022::class,
+		\Sourcefli\SnapshotTesting\Scenarios\Examples\TodayIsMarch3rd2021::class,
+		\Sourcefli\SnapshotTesting\Scenarios\Examples\TodayIsApril1st2022::class,
 	]]);
 });
 
@@ -44,13 +44,4 @@ it('provides scenario contracts that are currently available', function () {
 	$contracts = SnapshotTesting::collectScenarioContracts()->values()->all();
 
 	$this->assertSame($currentlyAvailable, $contracts);
-});
-
-it('time travels using a time travel scenario', function () {
-	SnapshotTesting::usingScenario(Scenarios\TodayIsMarch3rd2021::class);
-
-	$this->assertSame(
-		'2021-03-03',
-		now()->toDateString(),
-	);
 });

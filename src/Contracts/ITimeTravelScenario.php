@@ -5,7 +5,7 @@ namespace Sourcefli\SnapshotTesting\Contracts;
 use Carbon\CarbonImmutable;
 use Sourcefli\SnapshotTesting\Attributes\SnapshotCategory;
 
-#[SnapshotCategory(self::class)]
+#[SnapshotCategory(self::class, 'time_travelers')]
 interface ITimeTravelScenario extends IScenario
 {
 	/**

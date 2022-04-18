@@ -14,7 +14,7 @@ interface IScenario
 	/**
 	 * @return IDatabaseSnapshot[]
 	 */
-	public function relatedSnapshots(): array;
+	public function getSnapshots(): array;
 
 	/**
 	 * @param  IDatabaseSnapshot  $databaseSnapshot

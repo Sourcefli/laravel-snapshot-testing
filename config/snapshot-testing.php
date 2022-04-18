@@ -1,5 +1,8 @@
 <?php
 
+use Sourcefli\SnapshotTesting\Scenarios;
+use Sourcefli\SnapshotTesting\Snapshots;
+
 return [
 	'disk' => [
 		'snapshot-testing' => [
@@ -10,6 +13,7 @@ return [
 	],
 
 	'database' => [
+		'is_default_testing_connection' => true,
 		'connection' => [
 			'name' => 'snapshot_testing_connection',
 			'driver' => 'sqlite',
@@ -23,7 +27,11 @@ return [
 
 	'scenarios' => [
 		'time_travelers' => [
-			// add time traveler scenarios here...
+			// Add time traveler scenarios here, a couple examples have been provided
+			Scenarios\Examples\TodayIsMarch3rd2021::class,
+			Scenarios\Examples\TodayIsApril1st2022::class => [
+				Snapshots\Examples\UsersHadNoUsername::class
+			],
 		]
 	]
 ];

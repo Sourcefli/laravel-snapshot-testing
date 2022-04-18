@@ -4,7 +4,6 @@ namespace Sourcefli\SnapshotTesting;
 
 
 use Carbon\CarbonInterface;
-use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Collection;
@@ -29,10 +28,6 @@ class SnapshotTesting
 	 */
 	protected array $timeTravelScenarios = [];
 
-	public function __construct(
-		protected Repository $config
-	) {}
-
 	public function getConnection(): ISnapshotConnection
 	{
 		return app(ISnapshotConnection::class);
@@ -54,19 +49,11 @@ class SnapshotTesting
 			->map(fn (ReflectionClass $class) => $class->getName());
 	}
 
-	/**
-	 * @return ITimeTravelScenario[]
-	 */
-	public function getTimeTravelScenarios(): array
-	{
-		return $this->getConfig('scenarios.time_travelers');
-	}
-
-	public function usingScenario(string $scenario): SnapshotScenario
+	public function usingScenario(string|IScenario $scenario): SnapshotScenario
 	{
 		/** @var IScenario&SnapshotScenario $newScenario */
 		$newScenario = match(TRUE) {
-			is_a($scenario, ITimeTravelScenario::class, true) => app($scenario),
+			is_a($scenario, ITimeTravelScenario::class, true) => is_object($scenario) ? $scenario : app($scenario),
 			default => throw SnapshotTestingException::unknownScenario($scenario)
 		};
 

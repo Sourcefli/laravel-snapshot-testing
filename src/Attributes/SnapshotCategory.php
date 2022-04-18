@@ -8,6 +8,17 @@ use Attribute;
 class SnapshotCategory
 {
 	public function __construct(
-	    protected string $class
+	    protected string $class,
+		protected ?string $category = null
 	) {}
+
+	public function getCategory(): ?string
+	{
+		return $this->category;
+	}
+
+	public function getClass(): string
+	{
+		return $this->class;
+	}
 }
