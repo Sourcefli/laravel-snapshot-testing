@@ -26,6 +26,7 @@ it('knows valid categories')
 		ITimeTravelScenario::CATEGORY,
 	]);
 
+
 it('has time travel scenarios when configured', function () {
 	$scenarios = SnapshotTesting::getTimeTravelScenarios();
 
@@ -36,11 +37,13 @@ it('has time travel scenarios when configured', function () {
 	}
 });
 
+
 it('has a snapshot connection', function () {
 	$snapshotConnection = SnapshotTesting::getConnection();
 
 	$this->assertContains(Contracts\ISnapshotConnection::class, class_implements($snapshotConnection));
 });
+
 
 it('has a disk', function () {
 	$disk = SnapshotTesting::getDisk();
@@ -48,6 +51,7 @@ it('has a disk', function () {
 	$this->assertContains(Filesystem::class, class_implements($disk));
 	$this->assertStringEndsWith('storage/framework/cache/snapshots', $disk->getConfig()['root']);
 });
+
 
 it('provides scenario contracts that are currently available', function () {
 	$currentlyAvailable = [
@@ -60,6 +64,7 @@ it('provides scenario contracts that are currently available', function () {
 	$this->assertSame($currentlyAvailable, $contracts->flatMap->pluck('class')->all());
 });
 
+
 it('registers new scenarios as theyre being used', function () {
 	assertEmpty(SnapshotTesting::getScenarios());
 
@@ -67,6 +72,7 @@ it('registers new scenarios as theyre being used', function () {
 
 	assertTrue(SnapshotTesting::hasUsedScenario($scenario));
 });
+
 
 it('can declare snapshots in config at runtime', function () {
 	$category = Contracts\ITimeTravelScenario::CATEGORY;
@@ -76,7 +82,6 @@ it('can declare snapshots in config at runtime', function () {
 		IBasicScenario::CATEGORY => [],
 		ITimeTravelScenario::CATEGORY => [],
 	]]);
-
 
 	assertEmpty(SnapshotTesting::getSnapshotsForCategory($category));
 
@@ -92,6 +97,7 @@ it('can declare snapshots in config at runtime', function () {
 	assertCount(2, $snapshots);
 	assertSame(Snapshots\Examples\UsersHaveNoUsername::class, get_class($snapshots[0]));
 });
+
 
 it('can declare snapshots in the class at runtime', function () {
 	$category = Contracts\ITimeTravelScenario::CATEGORY;

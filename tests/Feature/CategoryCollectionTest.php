@@ -33,6 +33,7 @@ it('can add new categories', function () {
 	assertCount(2, $collection->getCategory(ITimeTravelScenario::CATEGORY));
 });
 
+
 it('wont duplicate snapshots of the same scenario', function () {
     $collection = CategoryCollection::make();
 
@@ -66,6 +67,7 @@ it('wont duplicate snapshots of the same scenario', function () {
 		UsersHaveManyPostsPerMonth::class
 	], collect($finalSnapshots)->map(fn ($c) => $c::class)->all());
 });
+
 
 it('wont duplicate scenario if it already exists', function () {
     $collection = CategoryCollection::make();

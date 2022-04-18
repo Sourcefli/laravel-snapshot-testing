@@ -3,6 +3,7 @@
 use Mockery as m;
 use Mockery\MockInterface;
 use Sourcefli\SnapshotTesting\Contracts\IScenario;
+use Sourcefli\SnapshotTesting\Contracts\ITimeTravelScenario;
 use Sourcefli\SnapshotTesting\Facades\SnapshotTesting;
 use Sourcefli\SnapshotTesting\Scenarios;
 use Sourcefli\SnapshotTesting\Snapshots;
@@ -12,7 +13,8 @@ use function PHPUnit\Framework\assertSame;
 
 it('knows its owned categories')
 	->expect(fn () => app(Scenarios\Examples\TodayIsMarch3rd2021::class)->collectOwnedCategories()->all())
-	->toBe(['time_travelers']);
+	->toBe([ITimeTravelScenario::CATEGORY]);
+
 
 it('can declare its own database snapshots for each scenario', function () {
 	$scenario = m::mock(Scenarios\Examples\TodayIsMarch3rd2021::class, IScenario::class, function (MockInterface $mock) {
