@@ -24,24 +24,14 @@ abstract class SnapshotScenario implements IScenario
 	/**
 	 * @var CategoryCollection[]
 	 */
-	protected array $categories;
+	protected array $categories = [];
 
 	public function __construct()
 	{
 		$this->snapshotManager = app('snapshot-testing');
-
-		$this->addScenariosByCategory();
-
-//		foreach ($this->snapshotManager->getConfig('scenarios') as $key => $value) {
-//			if (! is_array($value)) {
-//				continue;
-//			}
-//
-//			dump(['k' => $key, 'v' => $value]);
-//		}
 	}
 
-	public function getCategories(): Collection
+	public function collectCategoriesFromContractsImplemented(): Collection
 	{
 		return collect(class_implements($this))
 			->intersect($this->snapshotManager->collectScenarioContracts())
@@ -54,14 +44,19 @@ abstract class SnapshotScenario implements IScenario
 			->unique();
 	}
 
-	public function getSnapshots(): array
+	public function getCategories(): array
 	{
-		return $this->snapshots;
+		return $this->setCategories()->categories;
 	}
 
-	public function seedSnapshotData(IDatabaseSnapshot $databaseSnapshot): void
+	public function hasSnapshot(string $category, string|IDatabaseSnapshot $snapshot): bool
 	{
-		if (! Arr::has($this->snapshots, $databaseSnapshot::class)) {
+		return $this->categories[$category]?->hasSnapshot($snapshot) ?? false;
+	}
+
+	public function seedSnapshotData(string $category, IDatabaseSnapshot $databaseSnapshot): void
+	{
+		if (! Arr::has($this->categories[$category] ?? [], $databaseSnapshot::class)) {
 			throw SnapshotTestingException::snapshotNotFound($databaseSnapshot, $this);
 		}
 
@@ -76,9 +71,9 @@ abstract class SnapshotScenario implements IScenario
 		return [];
 	}
 
-	protected function addScenariosByCategory(array $snapshots = [])
+	protected function setCategories(array $snapshots = []): static
 	{
-		foreach ($this->getCategories() as $category) {
+		foreach ($this->collectCategoriesFromContractsImplemented() as $category) {
 			$snapshots = SnapshotCollection::make(array_unique([
 				...$this->snapshotManager->getConfig(sprintf('scenarios.%s.%s', $category, static::class), []),
 				...$this->snapshotDeclarations(),
@@ -90,9 +85,9 @@ abstract class SnapshotScenario implements IScenario
 				continue;
 			}
 
-			$this->categories[$category]->addSnapshots($snapshots);
+			$this->categories[$category]->addSnapshotCollection($snapshots);
 		}
 
-
+		return $this;
 	}
 }

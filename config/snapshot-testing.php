@@ -28,7 +28,9 @@ return [
 	'scenarios' => [
 		'time_travelers' => [
 			// Add time traveler scenarios here, a couple examples have been provided
-			Scenarios\Examples\TodayIsMarch3rd2021::class,
+			Scenarios\Examples\TodayIsMarch3rd2021::class => [
+
+			],
 			Scenarios\Examples\TodayIsApril1st2022::class => [
 				Snapshots\Examples\UsersHadNoUsername::class
 			],

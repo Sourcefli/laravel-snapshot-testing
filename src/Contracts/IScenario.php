@@ -14,12 +14,13 @@ interface IScenario
 	/**
 	 * @return IDatabaseSnapshot[]
 	 */
-	public function getSnapshots(): array;
+	public function getCategories(): array;
 
 	/**
+	 * @param  string  $category
 	 * @param  IDatabaseSnapshot  $databaseSnapshot
 	 */
-	public function seedSnapshotData(IDatabaseSnapshot $databaseSnapshot): void;
+	public function seedSnapshotData(string $category, IDatabaseSnapshot $databaseSnapshot): void;
 
 	/**
 	 * @return void

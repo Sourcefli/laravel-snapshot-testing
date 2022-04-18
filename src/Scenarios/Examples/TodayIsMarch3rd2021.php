@@ -6,6 +6,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Sourcefli\SnapshotTesting\Contracts\ITimeTravelScenario;
 use Sourcefli\SnapshotTesting\Scenarios\SnapshotScenario;
+use Sourcefli\SnapshotTesting\Snapshots\Examples\UsersHadNoUsername;
 use Sourcefli\SnapshotTesting\Snapshots\Examples\UsersHadOnePostPerMonth;
 use function Sourcefli\CarbonHelpers\carbonImmutable;
 
@@ -25,6 +26,7 @@ class TodayIsMarch3rd2021 extends SnapshotScenario implements ITimeTravelScenari
 	{
 		return [
 			UsersHadOnePostPerMonth::class,
+			UsersHadNoUsername::class
 		];
 	}
 }

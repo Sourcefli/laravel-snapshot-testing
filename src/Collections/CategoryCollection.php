@@ -3,6 +3,7 @@
 namespace Sourcefli\SnapshotTesting\Collections;
 
 use Illuminate\Support\Collection;
+use Sourcefli\SnapshotTesting\Contracts\IDatabaseSnapshot;
 use Sourcefli\SnapshotTesting\Contracts\IScenario;
 
 /**
@@ -27,11 +28,15 @@ class CategoryCollection extends Collection
 		return $this;
 	}
 
-	public function addSnapshots(SnapshotCollection $snapshots): static
+	public function addSnapshotCollection(SnapshotCollection $snapshots): static
 	{
-		if ($this->hasSnapshotsForScenario($scenario = $snapshots->getScenario())) {
+		if ($this->hasScenario($scenario = $snapshots->getScenario())) {
 			$this->findByScenario($scenario)->addSnapshots($snapshots);
+		} else {
+			$this->add($snapshots);
 		}
+
+		return $this;
 	}
 
 	/**
@@ -39,9 +44,19 @@ class CategoryCollection extends Collection
 	 *
 	 * @return bool
 	 */
-	public function hasSnapshotsForScenario(IScenario $scenario): bool
+	public function hasScenario(IScenario $scenario): bool
 	{
 		return $this->contains(fn (SnapshotCollection $snapshots) => get_class($snapshots->getScenario()) === get_class($scenario));
+	}
+
+	/**
+	 * @param  string|IDatabaseSnapshot  $snapshot
+	 *
+	 * @return bool
+	 */
+	public function hasSnapshot(string|IDatabaseSnapshot $snapshot): bool
+	{
+		return $this->contains(fn (SnapshotCollection $snapshots) => $snapshots->hasSnapshot($snapshot));
 	}
 
 	/**

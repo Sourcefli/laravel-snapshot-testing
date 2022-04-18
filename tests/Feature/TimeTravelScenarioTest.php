@@ -23,18 +23,24 @@ it('can declare its own database snapshots for each scenario', function () {
 		]);
 	});
 
-	$snapshots = SnapshotTesting::usingScenario($scenario)->getSnapshots();
+	$snapshots = SnapshotTesting::usingScenario($scenario)->getCategories();
 
 	assertNotEmpty($snapshots);
 	assertCount(1, $snapshots);
 	assertSame(Snapshots\Examples\UsersHadNoUsername::class, head($snapshots));
 });
 
-it('can have empty snapshot declarations within the scenario but have its snapshot declared in the config file', function () {
-//	config(['snapshot-testing.scenarios.time_travelers' => []]);
-	$scenario = SnapshotTesting::usingScenario(Scenarios\Examples\TodayIsMarch3rd2021::class);
+it('can have no snapshots declared in class when snapshots are declared in the config file', function () {
+	config(['snapshot-testing.scenarios.time_travelers' => []]);
 
-	assertEmpty($scenario->getSnapshots());
+	$scenario = m::mock(Scenarios\Examples\TodayIsMarch3rd2021::class, IScenario::class, function (MockInterface $mock) {
+		$mock->allows([
+			'setupTestEnvironment' => null,
+			'getSnapshots' => []
+		]);
+	});
+
+	assertEmpty($scenario->getCategories());
 
 	config(['snapshot-testing.scenarios.time_travelers' => [
 		Scenarios\Examples\TodayIsMarch3rd2021::class => [
@@ -43,7 +49,7 @@ it('can have empty snapshot declarations within the scenario but have its snapsh
 	]]);
 
 	$scenario = SnapshotTesting::usingScenario(Scenarios\Examples\TodayIsMarch3rd2021::class);
-	$snapshots = $scenario->getSnapshots();
+	$snapshots = $scenario->getCategories();
 
 	assertNotEmpty($snapshots);
 	assertCount(1, $snapshots);

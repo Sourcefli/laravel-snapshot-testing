@@ -39,18 +39,24 @@ class SnapshotCollection extends Collection
 		return $this;
 	}
 
-	public function addSnapshots(SnapshotCollection $snapshots)
+	public function addSnapshots(SnapshotCollection $snapshots): static
 	{
 		foreach ($snapshots as $snapshot) {
-			if ($this->hasSnapshot($snapshot)) {
-				continue;
+			if (! $this->hasSnapshot($snapshot)) {
+				$this->add($snapshot);
 			}
 		}
+
+		return $this;
 	}
 
-	public function hasSnapshot(IDatabaseSnapshot $snapshot): bool
+	public function hasSnapshot(string|IDatabaseSnapshot $snapshot): bool
 	{
-		return $this->contains(fn (IDatabaseSnapshot $existingSnapshot) => get_class($existingSnapshot) === get_class($snapshot));
+		if (is_object($snapshot)) {
+			$snapshot = get_class($snapshot);
+		}
+
+		return $this->contains(fn (IDatabaseSnapshot $existingSnapshot) => get_class($existingSnapshot) === $snapshot);
 	}
 
 	protected function assertSnapshotClass(string|object $snapshot): void
