@@ -88,20 +88,13 @@ class SnapshotConnection implements ISnapshotConnection
 	}
 
 	/**
-	 * $shouldRefresh Signature -> function(IDatabaseSnapshot $newSnapshot, ?IDatabaseSnapshot $previousSnapshot = null): bool
-	 *
-	 * @param  bool|Closure  $shouldRefresh
+	 * Signature: function(IDatabaseSnapshot $newSnapshot, ?IDatabaseSnapshot $previousSnapshot = null): bool
 	 */
 	public static function shouldRefreshWhen(bool|Closure $shouldRefresh): void
 	{
 		static::$shouldRefresh = $shouldRefresh;
 	}
 
-	/**
-	 * @param  string|IDatabaseSnapshot  $newSnapshot
-	 *
-	 * @return static
-	 */
 	public function setCurrentSnapshot(string|IDatabaseSnapshot $newSnapshot): static
 	{
 		$this->currentSnapshot = $newSnapshot;

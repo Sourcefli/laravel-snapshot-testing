@@ -8,7 +8,7 @@ use Illuminate\Database\ConnectionInterface;
 use Sourcefli\SnapshotTesting\Contracts\IDatabaseSnapshot;
 use Sourcefli\SnapshotTesting\Contracts\ISnapshotConnection;
 
-class UsersHadNoUsername implements IDatabaseSnapshot
+class UsersHaveNoUsername implements IDatabaseSnapshot
 {
 	public function applyDatabaseState(): static
 	{

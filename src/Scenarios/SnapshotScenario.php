@@ -1,14 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sourcefli\SnapshotTesting\Scenarios;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use ReflectionAttribute;
-use ReflectionClass;
-use Sourcefli\SnapshotTesting\Attributes\SnapshotCategory;
 use Sourcefli\SnapshotTesting\Collections\CategoryCollection;
-use Sourcefli\SnapshotTesting\Collections\SnapshotCollection;
 use Sourcefli\SnapshotTesting\Contracts\IDatabaseSnapshot;
 use Sourcefli\SnapshotTesting\Contracts\IScenario;
 use Sourcefli\SnapshotTesting\Exceptions\SnapshotTestingException;
@@ -28,30 +26,42 @@ abstract class SnapshotScenario implements IScenario
 
 	public function __construct()
 	{
-		$this->snapshotManager = app('snapshot-testing');
+		app('snapshot-testing')->addScenario($this);
 	}
 
-	public function collectCategoriesFromContractsImplemented(): Collection
+	public function addCategory(string $category): static
 	{
-		return collect(class_implements($this))
-			->intersect($this->snapshotManager->collectScenarioContracts())
-			->unique()
-			->map(fn (string $scenarioContract) => new ReflectionClass($scenarioContract))
-			->filter(fn (ReflectionClass $scenarioRflx) => count($scenarioRflx->getAttributes(SnapshotCategory::class)))
-			->flatMap(fn (ReflectionClass $scenarioRflx) => array_map(
-				fn (ReflectionAttribute $attribute) => $attribute->newInstance()->getCategory(), $scenarioRflx->getAttributes(SnapshotCategory::class))
-			)
-			->unique();
+		$this->categories = array_unique([
+			...$this->categories,
+			$category
+		]);
+
+		return $this;
+	}
+
+	public function collectOwnedCategories(): Collection
+	{
+		return $this->snapshotManager->getCategoriesForScenario($this);
 	}
 
 	public function getCategories(): array
 	{
-		return $this->setCategories()->categories;
+		return $this->categories;
 	}
 
 	public function hasSnapshot(string $category, string|IDatabaseSnapshot $snapshot): bool
 	{
-		return $this->categories[$category]?->hasSnapshot($snapshot) ?? false;
+		if (is_object($snapshot)) {
+			$snapshot = get_class($snapshot);
+		}
+
+		foreach ($this->snapshotManager->getSnapshotsForScenario($category, $this) as $_snapshot) {
+			if (get_class($_snapshot) === $snapshot) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public function seedSnapshotData(string $category, IDatabaseSnapshot $databaseSnapshot): void
@@ -71,23 +81,15 @@ abstract class SnapshotScenario implements IScenario
 		return [];
 	}
 
-	protected function setCategories(array $snapshots = []): static
+	public function setSnapshotManager(SnapshotTestingManager $snapshotManager): static
 	{
-		foreach ($this->collectCategoriesFromContractsImplemented() as $category) {
-			$snapshots = SnapshotCollection::make(array_unique([
-				...$this->snapshotManager->getConfig(sprintf('scenarios.%s.%s', $category, static::class), []),
-				...$this->snapshotDeclarations(),
-				...$snapshots
-			]))->setScenario($this);
-
-			if (! Arr::has($this->categories, $category)) {
-				$this->categories[$category] = CategoryCollection::make([$snapshots])->setCategory($category);
-				continue;
-			}
-
-			$this->categories[$category]->addSnapshotCollection($snapshots);
-		}
+		$this->snapshotManager = $snapshotManager;
 
 		return $this;
+	}
+
+	public function hasCategory(string $category): bool
+	{
+		return array_key_exists($category, $this->categories);
 	}
 }

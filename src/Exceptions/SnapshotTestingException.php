@@ -49,7 +49,7 @@ class SnapshotTestingException extends InvalidArgumentException
 
 	private static function getScenarioContracts(): string
 	{
-		return SnapshotTesting::collectScenarioContracts()->values()->map(fn ($class) => class_basename($class))->implode(', ');
+		return SnapshotTesting::collectCategorizedContractInfo()->flatMap->pluck('class')->implode(', ');
 	}
 
 	public static function classInvalid(string|object $invalidClass, string $expectedClass): static
@@ -60,5 +60,15 @@ class SnapshotTestingException extends InvalidArgumentException
 		return new static(
 			"Expected class of type [{$expectedClass}], received [{$invalidClass}]"
 		);
+	}
+
+	public static function vendorError(string $message): static
+	{
+		return new static("Vendor error: {$message}");
+	}
+
+	public static function invalidSnapshotCategory(string $categories): static
+	{
+		return new static("Invalid snapshot category/categories provided: [" .$categories. "]");
 	}
 }

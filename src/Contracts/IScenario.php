@@ -12,7 +12,7 @@ use Sourcefli\SnapshotTesting\Attributes\SnapshotCategory;
 interface IScenario
 {
 	/**
-	 * @return IDatabaseSnapshot[]
+	 * @return string[]
 	 */
 	public function getCategories(): array;
 

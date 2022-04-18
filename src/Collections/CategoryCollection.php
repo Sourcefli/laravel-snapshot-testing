@@ -2,51 +2,54 @@
 
 namespace Sourcefli\SnapshotTesting\Collections;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Sourcefli\SnapshotTesting\Contracts\IDatabaseSnapshot;
 use Sourcefli\SnapshotTesting\Contracts\IScenario;
+use Sourcefli\SnapshotTesting\Exceptions\SnapshotTestingException;
+use Sourcefli\SnapshotTesting\Facades\SnapshotTesting;
 
 /**
  * @implements Collection<array-key, SnapshotCollection>
  */
 class CategoryCollection extends Collection
 {
-	/**
-	 * @var string
-	 */
-	protected string $category;
-
-	/**
-	 * @param  string  $category
-	 *
-	 * @return static
-	 */
-	public function setCategory(string $category): static
-	{
-		$this->category = $category;
-
-		return $this;
-	}
-
 	public function addSnapshotCollection(SnapshotCollection $snapshots): static
 	{
-		if ($this->hasScenario($scenario = $snapshots->getScenario())) {
-			$this->findByScenario($scenario)->addSnapshots($snapshots);
-		} else {
-			$this->add($snapshots);
+		$scenario = $snapshots->getScenario();
+
+		$this->assertValidCategoryKeys($categories = $scenario->getCategories());
+
+		foreach ($categories as $category) {
+			match (TRUE) {
+				$this->hasScenario($scenario) => $this->findByScenario($scenario)->addSnapshots($snapshots),
+				$this->hasCategory($category) => $this->getCategory($category)->addSnapshots($snapshots),
+				default => $this[$category] = $snapshots,
+			};
 		}
 
 		return $this;
 	}
 
+	public function getCategory(string $category): ?SnapshotCollection
+	{
+		$this->assertValidCategoryKeys($category);
+
+		return $this->get($category);
+	}
+
 	/**
-	 * @param  IScenario  $scenario
+	 * @param  string|IScenario  $scenario
 	 *
 	 * @return bool
 	 */
-	public function hasScenario(IScenario $scenario): bool
+	public function hasScenario(string|IScenario $scenario): bool
 	{
-		return $this->contains(fn (SnapshotCollection $snapshots) => get_class($snapshots->getScenario()) === get_class($scenario));
+		if (is_object($scenario)) {
+			$scenario = get_class($scenario);
+		}
+
+		return $this->contains(fn (SnapshotCollection $snapshots) => get_class($snapshots->getScenario()) === $scenario);
 	}
 
 	/**
@@ -60,12 +63,43 @@ class CategoryCollection extends Collection
 	}
 
 	/**
-	 * @param  IScenario  $scenario
+	 * @param  string|IScenario  $scenario
 	 *
 	 * @return null|SnapshotCollection
 	 */
-	public function findByScenario(IScenario $scenario): ?SnapshotCollection
+	public function findByScenario(string|IScenario $scenario): ?SnapshotCollection
 	{
-		return $this->first(fn (SnapshotCollection $snapshots) => get_class($snapshots->getScenario()) === get_class($scenario));
+		if (is_object($scenario)) {
+			$scenario = get_class($scenario);
+		}
+
+		return $this->first(fn (SnapshotCollection $snapshots) => get_class($snapshots->getScenario()) === $scenario);
+	}
+
+	public function hasCategory(string $category): bool
+	{
+		return $this->keys()->contains($category);
+	}
+
+	/**
+	 * @param  string|array  $categories
+	 *
+	 * @return void
+	 */
+	protected function assertValidCategoryKeys(string|array $categories = []): void
+	{
+		$subjects = $this->keys()->merge(Arr::wrap($categories))->unique();
+
+		foreach ($subjects as $category) {
+			if (! SnapshotTesting::hasCategory($category)) {
+				throw SnapshotTestingException::invalidSnapshotCategory($category);
+			}
+		}
+	}
+
+	public function getValidCategories(): Collection
+	{
+		/** @noinspection PhpIncompatibleReturnTypeInspection */
+		return SnapshotTesting::collectCategorizedContractInfo()->flatMap->pluck('category');
 	}
 }

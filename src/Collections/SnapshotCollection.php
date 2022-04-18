@@ -65,4 +65,9 @@ class SnapshotCollection extends Collection
 			throw SnapshotTestingException::classInvalid($snapshot, IDatabaseSnapshot::class);
 		}
 	}
+
+	public static function forScenario(IScenario|string $scenario, array $snapshots = []): static
+	{
+		return (new static($snapshots))->setScenario($scenario);
+	}
 }
