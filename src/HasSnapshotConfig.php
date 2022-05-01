@@ -4,21 +4,16 @@ namespace Sourcefli\SnapshotTesting;
 
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
+use Sourcefli\SnapshotTesting\Contracts\IBasicScenario;
 use Sourcefli\SnapshotTesting\Contracts\IDatabaseSnapshot;
 use Sourcefli\SnapshotTesting\Contracts\IScenario;
 use Sourcefli\SnapshotTesting\Contracts\ITimeTravelScenario;
 
 trait HasSnapshotConfig
 {
-	/**
-	 * @param  string|null  $attribute
-	 * @param  mixed|null  $default
-	 *
-	 * @return mixed
-	 */
-	public function getConfig(?string $attribute = null, mixed $default = null): mixed
+	public function getSnapshotConfig(?string $attribute = null, mixed $default = null): mixed
 	{
-		$path = rtrim(sprintf('snapshot-testing.%s', $attribute ?? ''), '.');
+		$path = rtrim(sprintf('%s.%s', snapshotPackageConfigName(), $attribute ?? ''), '.');
 
 		return config($path, $default);
 	}
@@ -45,9 +40,13 @@ trait HasSnapshotConfig
 		return $this->getConfigurationClassesByContract($category, IDatabaseSnapshot::class);
 	}
 
-	/**
-	 * @return ITimeTravelScenario[]
-	 */
+	/**  @return IBasicScenario[] */
+	public function getBasicScenarios(): array
+	{
+		return $this->getConfiguredScenarios(IBasicScenario::class);
+	}
+
+	/**  @return ITimeTravelScenario[] */
 	public function getTimeTravelScenarios(): array
 	{
 		return $this->getConfiguredScenarios(ITimeTravelScenario::class);
@@ -61,7 +60,7 @@ trait HasSnapshotConfig
 	 */
 	private function getConfigurationClassesByContract(string $category, string $contract): array
 	{
-		$configScenarios = Arr::divide($this->getConfig("scenarios.$category"));
+		$configScenarios = Arr::divide($this->getSnapshotConfig("scenarios.$category") ?? []);
 
 		$filterScenarios = fn (array $scenarios) => array_filter(Arr::flatten($scenarios), fn ($s) => is_a($s, $contract, true));
 
@@ -73,9 +72,6 @@ trait HasSnapshotConfig
 			];
 		}
 
-		if ($contract !== IDatabaseSnapshot::class) {
-			dd($results);
-		}
 		return $results;
 }
 }

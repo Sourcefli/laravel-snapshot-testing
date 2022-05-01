@@ -1,4 +1,4 @@
-# Run PHPUnit tests against pre-determined database state using .sql or .sqlite files
+# Run PHPUnit tests against pre-existing (known) database state using .sql or .sqlite files
 
 More details coming soon!
 
@@ -19,8 +19,15 @@ php artisan vendor:publish --tag="laravel-snapshot-testing-config"
 This is the contents of the published config file:
 
 ```php
+<?php
+
+use Sourcefli\SnapshotTesting\Contracts\IBasicScenario;
+use Sourcefli\SnapshotTesting\Contracts\ITimeTravelScenario;
+use Sourcefli\SnapshotTesting\Scenarios;
+use Sourcefli\SnapshotTesting\Snapshots;
+
 return [
-    # The disk used when checking for .sql or .sqlite files
+    # Where your .sql/.sqlite files are stored
     'disk' => [
         'snapshot-testing' => [
             'driver' => 'local',
@@ -29,25 +36,19 @@ return [
         ],
     ],
 
-    # The database used when refreshing/setting up database state using pre-defined snapshots
+    # The database connection used
 	'database' => [
-		'is_default_testing_connection' => true,
-		'connection' => [
-			'name' => 'snapshot_testing_connection',
-			'driver' => 'sqlite',
-			'url' => env('SNAPSHOT_DATABASE_URL'),
-			'database' => env('SNAPSHOT_SQLITEDATABASE', ':memory:'),
-			'prefix' => '',
-			'foreign_key_constraints' => env('SNAPSHOT_DB_FOREIGN_KEYS', true),
-		],
-		'should_refresh_database_when_switching_scenarios' => true
+		'connection' => 'testing',
+		'refresh_database_when_switching_scenarios' => true
 	],
 
     # The varying scenarios you'd like to use. Each much fall under a pre-existing category (as listed here).
     # If you have any more category ideas, please let me know! 
 	'scenarios' => [
 		IBasicScenario::CATEGORY => [
-
+			Scenarios\Examples\NoSetupRequired::class => [
+				Snapshots\Examples\UsersHaveOnePostPerMonth::class,
+			],
 		],
 		ITimeTravelScenario::CATEGORY => [
 			// Add time traveler scenarios here, a couple examples have been provided

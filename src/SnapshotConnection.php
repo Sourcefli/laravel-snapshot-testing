@@ -6,11 +6,10 @@ use Closure;
 use Illuminate\Database\Connection as DBConnection;
 use Illuminate\Database\Console\Migrations\FreshCommand;
 use Illuminate\Database\Schema\Builder as SchemaBuilder;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use JetBrains\PhpStorm\ArrayShape;
+use InvalidArgumentException;
 use Sourcefli\SnapshotTesting\Contracts\IDatabaseSnapshot;
 use Sourcefli\SnapshotTesting\Contracts\ISnapshotConnection;
 use Sourcefli\SnapshotTesting\Exceptions\SnapshotTestingException;
@@ -34,22 +33,15 @@ class SnapshotConnection implements ISnapshotConnection
 	 */
 	protected static Closure|bool $shouldRefresh;
 
-	/**
-	 * @var SnapshotTesting
-	 */
-	protected SnapshotTesting $snapshotManager;
-
 	public function __construct()
 	{
-		$this->snapshotManager = app('snapshot-testing');
-
 		$this->setDatabase(
 			$this->getConfiguredConnection()
 		);
 
-		static::shouldRefreshWhen(function (IDatabaseSnapshot $newSnapshot, ?IDatabaseSnapshot $previousSnapshot = null) {
-		    return (bool) $this->getConfig('database.should_refresh_database_when_switching_scenarios', true);
-		});
+		static::$shouldRefresh ??= function (IDatabaseSnapshot $newSnapshot, ?IDatabaseSnapshot $previousSnapshot = null) {
+			return (bool) $this->getSnapshotConfig('database.refresh_database_when_switching_scenarios', true);
+		};
 	}
 
 	public function refreshDatabase(): void
@@ -57,32 +49,29 @@ class SnapshotConnection implements ISnapshotConnection
 		$this->getSchema()->dropAllTables();
 
 		Artisan::call(FreshCommand::class, [
-			'--database' => $this->getDatabase()->getName(),
+			'--database' => $this->getDatabaseConnection()->getName(),
 		]);
 	}
 
 	public function getSchema(): SchemaBuilder
 	{
-		return Schema::connection($this->getDatabase()->getName());
+		return Schema::connection($this->getDatabaseConnection()->getName());
 	}
 
-	/** Keeps checking config so connection can be swapped out as needed */
-	public function getDatabase(): DBConnection
+	public function getDatabaseConnection(): DBConnection
 	{
 		$configuredConnection = $this->getConfiguredConnection();
 
-		if ($configuredConnection->getDatabaseName() !== $this->dbConnection->getDatabaseName()) {
-			DB::purge($this->dbConnection->getName());
-
+		if ($configuredConnection->getName() !== $this->dbConnection->getName()) {
 			$this->setDatabase($configuredConnection);
 		}
 
 		return $this->dbConnection;
 	}
 
-	public function setDatabase(DBConnection $connection): static
+	public function setDatabase(DBConnection|string $connection): static
 	{
-		$this->dbConnection = $connection;
+		$this->dbConnection = is_string($connection) ? \DB::connection($connection) : $connection;
 
 		return $this;
 	}
@@ -110,41 +99,25 @@ class SnapshotConnection implements ISnapshotConnection
 
 	private function getConfiguredConnection(): DBConnection
 	{
-		$settings = $this->getConfig('database.connection');
+		$connectionName = $this->getSnapshotConfig('database.connection');
 
-		if (is_string($settings)) {
-			return DB::connection($settings);
-		}
-
-		if (! is_array($settings)) {
+		if (! is_string($connectionName)) {
 			throw SnapshotTestingException::invalidConfiguration(
-				gettype($settings),
-				"snapshot.connection configuration must be a string (existing connection name), or an array containing connection settings"
+				gettype($connectionName), 'an existing connection name'
 			);
 		}
 
-		$settings = $settings + self::getInMemorySettings();
+		try {
+			return DB::connection($connectionName);
+		} catch (InvalidArgumentException $e) {
+		    if (str_ends_with($e->getMessage(), "[$connectionName] not configured.")) {
+				throw SnapshotTestingException::invalidConfiguration(
+					$connectionName,
+					"an existing connection name"
+				);
+			}
 
-		config()->set("database.connections.".$name = Arr::pull($settings, 'name'), $settings);
-
-		return DB::connection($name);
-	}
-
-	#[ArrayShape([
-		'name' => "string",
-		'driver' => "string",
-		'database' => "string",
-		'prefix' => "string",
-		'foreign_key_constraints' => "bool"
-	])]
-	public static function getInMemorySettings(): array
-	{
-		return [
-			'name' => 'snapshot_testing_connection',
-			'driver' => 'sqlite',
-			'database' => ':memory:',
-			'prefix' => '',
-			'foreign_key_constraints' => true,
-		];
+			throw $e;
+		}
 	}
 }

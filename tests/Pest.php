@@ -5,4 +5,4 @@ use Sourcefli\SnapshotTesting\Tests\TestCase;
 
 uses(TestCase::class)
 	->afterAll(fn () => m::close())
-	->in(__DIR__);
+	->in('Feature');

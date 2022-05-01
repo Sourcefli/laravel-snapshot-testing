@@ -36,9 +36,11 @@
     },
     "autoload": {
         "psr-4": {
-            "Sourcefli\\SnapshotTesting\\": "src",
-            "Sourcefli\\SnapshotTesting\\Database\\Factories\\": "database/factories"
-        }
+            "Sourcefli\\SnapshotTesting\\": "src"
+        },
+      "files": [
+          "src/snapshot-testing-helpers.php"
+      ]
     },
     "autoload-dev": {
         "psr-4": {

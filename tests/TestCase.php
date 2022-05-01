@@ -8,11 +8,6 @@ use Spatie\LaravelRay\RayServiceProvider;
 
 class TestCase extends Orchestra
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-    }
-
     protected function getPackageProviders($app): array
 	{
         return [
@@ -23,6 +18,6 @@ class TestCase extends Orchestra
 
     public function getEnvironmentSetUp($app)
     {
-        config()->set('database.default', 'testing');
+		$app['config']->set('database.default', 'testing');
     }
 }

@@ -7,16 +7,17 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use InvalidArgumentException;
 use JetBrains\PhpStorm\ArrayShape;
 use ReflectionAttribute;
 use ReflectionClass;
 use Sourcefli\SnapshotTesting\Attributes\SnapshotCategory;
-use Sourcefli\SnapshotTesting\Collections\CategoryCollection;
+use Sourcefli\SnapshotTesting\Collections\SnapshotCategoriesCollection;
 use Sourcefli\SnapshotTesting\Collections\SnapshotCollection;
 use Sourcefli\SnapshotTesting\Contracts\IScenario;
 use Sourcefli\SnapshotTesting\Contracts\ISnapshotConnection;
 use Sourcefli\SnapshotTesting\Exceptions\SnapshotTestingException;
-use Sourcefli\SnapshotTesting\Scenarios\ScenarioStorage;
+use Sourcefli\SnapshotTesting\Scenarios\ScenarioStore;
 use Sourcefli\SnapshotTesting\Scenarios\SnapshotScenario;
 use SplObjectStorage;
 use Symfony\Component\Finder\Finder;
@@ -27,18 +28,18 @@ class SnapshotTesting
 	use HasSnapshotConfig;
 
 	/**
-	 * @var ScenarioStorage<ScenarioStorage, CategoryCollection<array-key, SnapshotCollection>>
+	 * @var ScenarioStore<ScenarioStore, SnapshotCategoriesCollection<array-key, SnapshotCollection>>
 	 */
-	protected ScenarioStorage $scenarios;
+	protected ScenarioStore $scenarios;
 
 	/**
-	 * @var CategoryCollection[]
+	 * @var SnapshotCategoriesCollection[]
 	 */
 	protected array $categories = [];
 
 	public function __construct()
 	{
-	    $this->scenarios = new ScenarioStorage;
+	    $this->scenarios = new ScenarioStore;
 	}
 
 	public function addScenario(SnapshotScenario $scenario): static
@@ -48,11 +49,11 @@ class SnapshotTesting
 
 			if (! $this->scenarios->offsetExists($scenario)) {
 				$scenario->addCategory($category);
-				$this->scenarios[$scenario] = CategoryCollection::make([$category => $snapshots]);
+				$this->scenarios[$scenario] = SnapshotCategoriesCollection::make([$category => $snapshots]);
 				continue;
 			}
 
-			$this->scenarios->getCategoryCollection($scenario)->addSnapshotCollection($snapshots);
+			$this->scenarios->getCategoryCollection($scenario)->addSnapshots($snapshots);
 		}
 
 		app()->instance(get_class($scenario), $scenario);
@@ -62,12 +63,11 @@ class SnapshotTesting
 
 	public function hasCategory(string $category): bool
 	{
-		return $this->getAvailableCategories()->contains($category);
+		return $this->getAvailableCategories()->contains(
+			fn (string $existingCategory) => interface_exists($category) ? $category::CATEGORY : $category
+		);
 	}
 
-	/**
-	 * @return Collection
-	 */
 	public function getAvailableCategories(): Collection
 	{
 		/** @noinspection PhpIncompatibleReturnTypeInspection */
@@ -95,7 +95,7 @@ class SnapshotTesting
 
 	#[ArrayShape([
 		'scenario' => IScenario::class,
-		'categories' => CategoryCollection::class,
+		'categories' => SnapshotCategoriesCollection::class,
 	])]
 	public function getUsedScenarioWithInfo(string|IScenario $scenario): ?array
 	{
@@ -162,29 +162,32 @@ class SnapshotTesting
 
 	public function usingScenario(string|IScenario $scenario): SnapshotScenario
 	{
-		/** @var IScenario&SnapshotScenario $newScenario */
-		$newScenario = match(TRUE) {
-			is_a($scenario, IScenario::class, true) => is_object($scenario) ? $scenario : app($scenario),
-			default => throw SnapshotTestingException::unknownScenario($scenario)
-		};
+		if (! is_a($scenario, IScenario::class, true)) {
+			throw SnapshotTestingException::unknownScenario($scenario);
+		}
 
-		$this->addScenario($newScenario);
+		$this->addScenario(
+			$newScenario = is_object($scenario) ? $scenario : $scenario::make()
+		);
 
-		$newScenario->setupTestEnvironment();
-
-		return $newScenario;
+		return tap($newScenario)->setup();
 	}
 
 	public function getSnapshotsForCategory(string $category): ?SnapshotCollection
 	{
-		collect($this->getConfig("scenarios.$category", []))
+		if (interface_exists($category)) {
+			$category = $category::CATEGORY;
+		}
+
+		collect($this->getSnapshotConfig("scenarios.$category", []))
 			->keys()
 			->each(function (string $scenarioClass) use ($category) {
 				# if we've already bound this scenario, make sure no updates were made to its snapshot(s)
 				# if not, continue with the same instance (do nothing here)
 				# is so, new up this scenario, so it gets registered
 				if ($this->scenarioHasUpdatesForCategory($category, $scenarioClass)) {
-					new $scenarioClass;
+					/** @var SnapshotScenario $scenarioClass */
+					$scenarioClass::make();
 				}
 			});
 
@@ -196,27 +199,35 @@ class SnapshotTesting
 			$categoryCollection = $this->scenarios->getCategoryCollection($scenario);
 
 			if ($categoryCollection->hasScenario($scenario)) {
-				$categoryCollection->addSnapshotCollection(
+				$categoryCollection->addSnapshots(
 					$this->getSnapshotsForScenario($category, $scenario)
 				);
 
-				return $categoryCollection->findByScenario($scenario);
+				return $categoryCollection->forScenario($scenario);
 			}
 		}
 
 		return null;
 	}
 
-	public function getSnapshotsForScenario($category, SnapshotScenario $scenario): SnapshotCollection
+	public function getSnapshotsForScenario(string $category, SnapshotScenario|string $scenario): SnapshotCollection
 	{
 		if (! $this->hasCategory($category)) {
 			throw SnapshotTestingException::invalidSnapshotCategory($category);
 		}
 
+		if (! is_a($scenario, SnapshotScenario::class, true)) {
+			throw new InvalidArgumentException("scenario given must be a SnapshotScenario instance or class-string");
+		}
+
+		if (is_string($scenario)) {
+			$scenario = $scenario::make();
+		}
+
 		return collect([
-				...$this->hasUsedScenario($scenario) ? $this->getUsedScenarioWithInfo($scenario)['categories']?->findByScenario($scenario) : [],
-				...$this->getConfiguredSnapshots($category),
-				...$scenario->snapshotDeclarations(),
+			...$this->hasUsedScenario($scenario) ? $this->getUsedScenarioWithInfo($scenario)['categories']?->forScenario($scenario) : [],
+			...$this->getConfiguredSnapshots($category),
+			...$scenario->snapshotDeclarations(),
 			])
 			->map(fn (string|object $class) => is_object($class) ? get_class($class) : $class)
 			->unique()
@@ -230,7 +241,7 @@ class SnapshotTesting
 			return true;
 		}
 
-		$existingSnapshots = ($this->getUsedScenarioWithInfo($scenario)['categories'] ?? CategoryCollection::make())->findByScenario($scenario);
+		$existingSnapshots = ($this->getUsedScenarioWithInfo($scenario)['categories'] ?? SnapshotCategoriesCollection::make())->forScenario($scenario);
 		$newSnapshots = $this->getSnapshotsForScenario($category, app($scenario));
 
 		return $existingSnapshots->isEmpty() ||

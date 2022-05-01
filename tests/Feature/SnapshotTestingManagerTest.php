@@ -116,7 +116,7 @@ it('can declare snapshots in the class at runtime', function () {
 			UsersHaveOnePostPerMonth::class,
 			UsersHaveNoUsername::class
 		]]);
-		$mock->allows('setupTestEnvironment')->andReturnNull();
+		$mock->allows('setup')->andReturnNull();
 		$mock->allows('addCategory')->with($category = ITimeTravelScenario::CATEGORY);
 		$mock->allows('getCategories')->andReturn([$category]);
 	}));

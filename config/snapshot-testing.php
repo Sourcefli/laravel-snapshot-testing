@@ -6,6 +6,7 @@ use Sourcefli\SnapshotTesting\Scenarios;
 use Sourcefli\SnapshotTesting\Snapshots;
 
 return [
+
 	'disk' => [
 		'snapshot-testing' => [
 			'driver' => 'local',
@@ -15,21 +16,15 @@ return [
 	],
 
 	'database' => [
-		'is_default_testing_connection' => true,
-		'connection' => [
-			'name' => 'snapshot_testing_connection',
-			'driver' => 'sqlite',
-			'url' => env('SNAPSHOT_DATABASE_URL'),
-			'database' => env('SNAPSHOT_SQLITEDATABASE', ':memory:'),
-			'prefix' => '',
-			'foreign_key_constraints' => env('SNAPSHOT_DB_FOREIGN_KEYS', true),
-		],
-		'should_refresh_database_when_switching_scenarios' => true
+		'connection' => env('SNAPSHOT_CONNECTION'),
+		'refresh_database_when_switching_scenarios' => true
 	],
 
 	'scenarios' => [
 		IBasicScenario::CATEGORY => [
-
+			Scenarios\Examples\NoSetupRequired::class => [
+				Snapshots\Examples\UsersHaveOnePostPerMonth::class,
+			],
 		],
 		ITimeTravelScenario::CATEGORY => [
 			// Add time traveler scenarios here, a couple examples have been provided
@@ -37,8 +32,8 @@ return [
 				Snapshots\Examples\UsersHaveOnePostPerMonth::class,
 			],
 			Scenarios\Examples\TodayIsApril1st2022::class => [
-				Snapshots\Examples\UsersHaveNoUsername::class,
-				Snapshots\Examples\UsersHaveManyPostsPerMonth::class
+				// {@see \Sourcefli\SnapshotTesting\Scenarios\Examples\TodayIsApril1st2022::snapshotDeclarations()}
+				// for alternative option when declaring snapshots
 			],
 		]
 	]

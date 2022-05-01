@@ -11,7 +11,7 @@ interface ISnapshotConnection
 	/**
 	 * @return DBConnection
 	 */
-	public function getDatabase(): DBConnection;
+	public function getDatabaseConnection(): DBConnection;
 
 	/**
 	 * @return SchemaBuilder

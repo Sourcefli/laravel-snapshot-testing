@@ -8,6 +8,8 @@ use Sourcefli\SnapshotTesting\Attributes\SnapshotCategory;
  * @internal
  *
  * Use contracts having the {@see SnapshotCategory} attribute
+ * @see ITimeTravelScenario::class
+ * @see IBasicScenario::class
  */
 interface IScenario
 {
@@ -25,5 +27,5 @@ interface IScenario
 	/**
 	 * @return void
 	 */
-	public function setupTestEnvironment(): void;
+	public function setup(): void;
 }

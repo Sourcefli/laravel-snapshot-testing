@@ -12,14 +12,13 @@ use Sourcefli\SnapshotTesting\Exceptions\SnapshotTestingException;
  */
 class SnapshotCollection extends Collection
 {
-	/** @noinspection PhpVoidFunctionResultUsedInspection */
 	public function __construct($items = [])
 	{
-		parent::__construct(array_map(fn (string|IDatabaseSnapshot $snapshot) =>
-			with($this->assertSnapshotClass($snapshot),
-				fn () => is_string($snapshot) ? app($snapshot) : $snapshot
-			), $items)
-		);
+		parent::__construct(array_map(
+			[$this, 'instantiateSnapshot'],
+//			fn (string|IDatabaseSnapshot $snapshot) => $this->instantiateSnapshot($snapshot),
+			static::unwrap($items)
+		));
 	}
 
 	/**
@@ -34,7 +33,12 @@ class SnapshotCollection extends Collection
 
 	public function setScenario(string|IScenario $scenario): static
 	{
-		$this->scenario = is_string($scenario) ? app($scenario) : $scenario;
+		if (is_string($scenario)) {
+			/** @var IScenario $scenario */
+			$scenario = $scenario::make();
+		}
+
+		$this->scenario = $scenario;
 
 		return $this;
 	}
@@ -59,11 +63,13 @@ class SnapshotCollection extends Collection
 		return $this->contains(fn (IDatabaseSnapshot $existingSnapshot) => get_class($existingSnapshot) === $snapshot);
 	}
 
-	protected function assertSnapshotClass(string|object $snapshot): void
+	protected function instantiateSnapshot(string|object $snapshot): IDatabaseSnapshot
 	{
 		if (! is_a($snapshot, IDatabaseSnapshot::class, true)) {
 			throw SnapshotTestingException::classInvalid($snapshot, IDatabaseSnapshot::class);
 		}
+
+		return is_string($snapshot) ? app($snapshot) : $snapshot;
 	}
 
 	public static function forScenario(IScenario|string $scenario, array $snapshots = []): static

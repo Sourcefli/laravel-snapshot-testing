@@ -12,17 +12,19 @@ use Sourcefli\SnapshotTesting\Facades\SnapshotTesting;
 /**
  * @implements Collection<array-key, SnapshotCollection>
  */
-class CategoryCollection extends Collection
+class SnapshotCategoriesCollection extends Collection
 {
-	public function addSnapshotCollection(SnapshotCollection $snapshots): static
+	public function addSnapshots(iterable $snapshots): static
 	{
+		$snapshots = $snapshots instanceof SnapshotCollection ? $snapshots : SnapshotCollection::make($snapshots);
+
 		$scenario = $snapshots->getScenario();
 
 		$this->assertValidCategoryKeys($categories = $scenario->getCategories());
 
 		foreach ($categories as $category) {
 			match (TRUE) {
-				$this->hasScenario($scenario) => $this->findByScenario($scenario)->addSnapshots($snapshots),
+				$this->hasScenario($scenario) => $this->forScenario($scenario)->addSnapshots($snapshots),
 				$this->hasCategory($category) => $this->getCategory($category)->addSnapshots($snapshots),
 				default => $this[$category] = $snapshots,
 			};
@@ -67,7 +69,7 @@ class CategoryCollection extends Collection
 	 *
 	 * @return null|SnapshotCollection
 	 */
-	public function findByScenario(string|IScenario $scenario): ?SnapshotCollection
+	public function forScenario(string|IScenario $scenario): ?SnapshotCollection
 	{
 		if (is_object($scenario)) {
 			$scenario = get_class($scenario);

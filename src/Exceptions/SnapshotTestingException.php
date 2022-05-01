@@ -13,7 +13,7 @@ class SnapshotTestingException extends InvalidArgumentException
 
 	public static function invalidConfiguration(string $received, string $expected): static
 	{
-		$message = sprintf("Invalid snapshot configuration, expected [%s], but received [%s]", $expected, $received);
+		$message = sprintf("Invalid snapshot configuration. Expected %s but received %s", $expected, $received);
 
 		return new static($message, self::CONFIGURATION_EXCEPTION_CODE);
 	}

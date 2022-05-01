@@ -15,16 +15,13 @@ class TodayIsMarch3rd2021 extends SnapshotScenario implements ITimeTravelScenari
 		return carbonImmutable('2021-03-03');
 	}
 
-	public function setupTestEnvironment(): void
+	public function setup(): void
 	{
 		Date::setTestNow($this->getTimeTravelDate());
 	}
 
 	public function snapshotDeclarations(): array
 	{
-		return [
-//			UsersHaveOnePostPerMonth::class,
-//			UsersHaveNoUsername::class
-		];
+		return [];
 	}
 }

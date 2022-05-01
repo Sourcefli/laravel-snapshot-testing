@@ -6,27 +6,25 @@ namespace Sourcefli\SnapshotTesting\Scenarios;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Sourcefli\SnapshotTesting\Collections\CategoryCollection;
+use Sourcefli\SnapshotTesting\Collections\SnapshotCategoriesCollection;
 use Sourcefli\SnapshotTesting\Contracts\IDatabaseSnapshot;
 use Sourcefli\SnapshotTesting\Contracts\IScenario;
 use Sourcefli\SnapshotTesting\Exceptions\SnapshotTestingException;
-use Sourcefli\SnapshotTesting\SnapshotTesting as SnapshotTestingManager;
+use Sourcefli\SnapshotTesting\Facades\SnapshotTesting;
 
 abstract class SnapshotScenario implements IScenario
 {
 	/**
-	 * @var SnapshotTestingManager
-	 */
-	protected SnapshotTestingManager $snapshotManager;
-
-	/**
-	 * @var CategoryCollection[]
+	 * @var SnapshotCategoriesCollection[]
 	 */
 	protected array $categories = [];
 
-	public function __construct()
+	/** no public access. use '::make()'  */
+	private function __construct() {}
+
+	public static function make(): static
 	{
-		app('snapshot-testing')->addScenario($this);
+		return tap(new static, fn ($self) => SnapshotTesting::addScenario($self));
 	}
 
 	public function addCategory(string $category): static
@@ -41,7 +39,7 @@ abstract class SnapshotScenario implements IScenario
 
 	public function collectOwnedCategories(): Collection
 	{
-		return $this->snapshotManager->getCategoriesForScenario($this);
+		return SnapshotTesting::getCategoriesForScenario($this);
 	}
 
 	public function getCategories(): array
@@ -55,7 +53,7 @@ abstract class SnapshotScenario implements IScenario
 			$snapshot = get_class($snapshot);
 		}
 
-		foreach ($this->snapshotManager->getSnapshotsForScenario($category, $this) as $_snapshot) {
+		foreach (SnapshotTesting::getSnapshotsForScenario($category, $this) as $_snapshot) {
 			if (get_class($_snapshot) === $snapshot) {
 				return true;
 			}
@@ -70,7 +68,7 @@ abstract class SnapshotScenario implements IScenario
 			throw SnapshotTestingException::snapshotNotFound($databaseSnapshot, $this);
 		}
 
-		$this->snapshotManager->getConnection()->setCurrentSnapshot($databaseSnapshot);
+		SnapshotTesting::getConnection()->setCurrentSnapshot($databaseSnapshot);
 
 		$databaseSnapshot->applyDatabaseState();
 	}
@@ -79,13 +77,6 @@ abstract class SnapshotScenario implements IScenario
 	public function snapshotDeclarations(): array
 	{
 		return [];
-	}
-
-	public function setSnapshotManager(SnapshotTestingManager $snapshotManager): static
-	{
-		$this->snapshotManager = $snapshotManager;
-
-		return $this;
 	}
 
 	public function hasCategory(string $category): bool
