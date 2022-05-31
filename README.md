@@ -1,6 +1,8 @@
-# Run PHPUnit tests against pre-existing (known) database state using .sql or .sqlite files
+# Laravel Snapshot Testing
 
-### WIP. More details coming soon.
+### WIP. 
+
+Run PHPUnit tests against pre-existing (known) database state using .sql or .sqlite files
 
 ---
 
