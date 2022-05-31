@@ -1,6 +1,8 @@
 # Run PHPUnit tests against pre-existing (known) database state using .sql or .sqlite files
 
-More details coming soon!
+### WIP. More details coming soon.
+
+---
 
 ## Installation
 
